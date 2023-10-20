@@ -24,10 +24,12 @@
     "gts": "^5.2.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^7.6.3",
-    "typescript": "^5.2.2"
+    "typescript": "^5.2.2",
+    "winston": "^3.11.0"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.1",
+    "@types/jsonwebtoken": "^9.0.4",
     "@types/node": "20.8.2",
     "gts": "^5.2.0",
     "typescript": "~5.2.0"
