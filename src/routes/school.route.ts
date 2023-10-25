@@ -18,7 +18,9 @@ authSchoolRouter.get("/exams/:id");
 authSchoolRouter.patch("/exams/:id");
 authSchoolRouter.delete("/exams/:id");
 authSchoolRouter.post("/exams/:id/start");
+authSchoolRouter.post("/exams/:id/end");
 
+// Including middleware to auth routes
 schoolRouter.use("/", verifySchool, authSchoolRouter);
 
 // Unauthenticated routes
