@@ -7,7 +7,7 @@ export const signJWT = (data: any, type: "admin" | "student" | "school"):string 
         data,
         type,
         iat: Math.floor(Date.now() / 1000),
-        exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24),
+        // exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24),
         iss: "krendus-exam-server",
     }
     return jwt.sign(payload, secretKey)
@@ -21,7 +21,7 @@ export const verifyJWT = (token: string) => {
             data: any,
             type: "admin" | "student" | "school",
             iat: number,
-            exp: number,
+            // exp: number,
             iss: string,
         };
         return decoded;

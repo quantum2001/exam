@@ -1,11 +1,16 @@
 import { NextFunction, Request, Response } from "express";
 import { verifyJWT } from "../utils/jwt.util";
 
-export const verifyStudent = (req: Request, res: Response, next: NextFunction) => {
+interface AuthenticatedReq extends Request {
+    user?: any
+}
+
+export const verifyStudent = (req: AuthenticatedReq, res: Response, next: NextFunction) => {
     const token = req.headers["authorization"];
     const decoded = verifyJWT(token?.split(" ")[1] ?? "");
     if(decoded) {
         if(decoded.type === "student" && decoded.iss === "krendus-exam-server") {
+            req.user = decoded.data
             next();
         } else {
             res.status(401).send({
@@ -43,11 +48,12 @@ export const verifyAdmin = (req: Request, res: Response, next: NextFunction) => 
         })
     }
 }
-export const verifySchool = (req: Request, res: Response, next: NextFunction) => {
+export const verifySchool = (req: AuthenticatedReq, res: Response, next: NextFunction) => {
     const token = req.headers["authorization"];
     const decoded = verifyJWT(token?.split(" ")[1] ?? "");
     if(decoded) {
         if(decoded.type === "school" && decoded.iss === "krendus-exam-server") {
+            req.user = decoded.data
             next();
         } else {
             res.status(401).send({
