@@ -1,37 +1,37 @@
 import { Router } from "express";
 import { verifySchool } from "../middlewares/auth.middleware";
+import { createExam, createExamQuestion, createStudent, deleteExam, deleteExamQuestion, deleteStudent, downloadResult, endExam, getAllExam, getAllExamQuestions, getAllStudents, getExam, getSchool, getSingleExamQuestion, getStudent, login, register, startExam, updateExam, updateExamQuestion, updateSchool, updateStudent } from "../controllers/school.controller";
 
 const schoolRouter = Router();
 const authSchoolRouter = Router();
 
 // Authenticated routes
-authSchoolRouter.patch("/:id");
-authSchoolRouter.get("/:id");
-authSchoolRouter.post("/students");
-authSchoolRouter.get("/students");
-authSchoolRouter.get("/students/:id");
-authSchoolRouter.patch("/students/:id");
-authSchoolRouter.delete("/students/:id");
-authSchoolRouter.post("/exams");
-authSchoolRouter.get("/exams");
-authSchoolRouter.get("/exams/:id");
-authSchoolRouter.get("/exams/:id/download");
-authSchoolRouter.patch("/exams/:id");
-authSchoolRouter.delete("/exams/:id");
-authSchoolRouter.post("/exams/:id/start");
-authSchoolRouter.post("/exams/:id/end");
-authSchoolRouter.post("/exams/questions");
-authSchoolRouter.get("/exams/questions/all/:exam_id");
-authSchoolRouter.get("/exams/questions/all");
-authSchoolRouter.get("/exams/questions/:id");
-authSchoolRouter.patch("/exams/questions/:id");
-authSchoolRouter.delete("/exams/questions/:id");
+authSchoolRouter.patch("/:id", updateSchool);
+authSchoolRouter.get("/:id", getSchool);
+authSchoolRouter.post("/students", createStudent);
+authSchoolRouter.get("/students", getAllStudents);
+authSchoolRouter.get("/students/:id", getStudent);
+authSchoolRouter.patch("/students/:id", updateStudent);
+authSchoolRouter.delete("/students/:id", deleteStudent);
+authSchoolRouter.post("/exams", createExam);
+authSchoolRouter.get("/exams", getAllExam);
+authSchoolRouter.get("/exams/:id", getExam);
+authSchoolRouter.get("/exams/:id/download", downloadResult);
+authSchoolRouter.patch("/exams/:id", updateExam);
+authSchoolRouter.delete("/exams/:id", deleteExam);
+authSchoolRouter.post("/exams/:id/start", startExam);
+authSchoolRouter.post("/exams/:id/end", endExam);
+authSchoolRouter.post("/exams/questions", createExamQuestion);
+authSchoolRouter.get("/exams/questions/all/:exam_id", getAllExamQuestions);
+authSchoolRouter.get("/exams/questions/:id", getSingleExamQuestion);
+authSchoolRouter.patch("/exams/questions/:id", updateExamQuestion);
+authSchoolRouter.delete("/exams/questions/:id", deleteExamQuestion);
 
 // Including middleware to auth routes
 schoolRouter.use("/", verifySchool, authSchoolRouter);
 
 // Unauthenticated routes
-schoolRouter.post("/register");
-schoolRouter.post("/login");
+schoolRouter.post("/register", register);
+schoolRouter.post("/login", login);
 
 export default schoolRouter;
