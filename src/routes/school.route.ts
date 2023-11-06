@@ -12,9 +12,10 @@ import {
   downloadResult,
   endExam,
   getAllClasses,
-  getAllExam,
   getAllExamQuestions,
+  getAllExams,
   getAllStudents,
+  getClass,
   getExam,
   getSchool,
   getSingleExamQuestion,
@@ -22,6 +23,7 @@ import {
   login,
   register,
   startExam,
+  updateClass,
   updateExam,
   updateExamQuestion,
   updateSchool,
@@ -45,8 +47,10 @@ authSchoolRouter.delete('/students/:id', deleteStudent);
 authSchoolRouter.post('/classes', createClass);
 authSchoolRouter.get('/classes', getAllClasses);
 authSchoolRouter.delete('/classes/:id', deleteClass);
+authSchoolRouter.get('/classes/:id', getClass);
+authSchoolRouter.patch('/classes/:id', updateClass);
 authSchoolRouter.post('/exams', createExam);
-authSchoolRouter.get('/exams', getAllExam);
+authSchoolRouter.get('/exams', getAllExams);
 authSchoolRouter.get('/exams/:id', getExam);
 authSchoolRouter.get('/exams/:id/download', downloadResult);
 authSchoolRouter.patch('/exams/:id', updateExam);

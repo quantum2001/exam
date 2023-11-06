@@ -24,11 +24,13 @@ const examQuestionSchema = new Schema({
   },
   created_at: {
     type: Number,
+    required: true,
     default: Date.now(),
   },
   updated_at: {
     type: Number,
     required: true,
+    default: Date.now(),
   },
 });
 

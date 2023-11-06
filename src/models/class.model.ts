@@ -14,6 +14,11 @@ const classSchema = new Schema({
     default: Date.now(),
     required: true,
   },
+  updated_at: {
+    type: Number,
+    default: Date.now(),
+    required: true,
+  },
 });
 
 const Model = model('Class', classSchema);

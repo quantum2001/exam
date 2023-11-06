@@ -16,6 +16,8 @@ import {signJWT} from '../utils/jwt.util';
 import ClassModel from '../models/class.model';
 import mongoose, {isObjectIdOrHexString} from 'mongoose';
 import StudentModel from '../models/student.model';
+import { ICreateExamReq } from '../dtos/exam.dto';
+import ExamModel from '../models/exam.model';
 const ObjectId = mongoose.Types.ObjectId;
 interface AuthenticatedReq extends Request {
   user?: any;
@@ -197,6 +199,72 @@ export const getAllClasses = async (req: AuthenticatedReq, res: Response) => {
     sendResponse(res, null, 'Server error', 500, 'error');
   }
 };
+export const getClass = async (req: AuthenticatedReq, res: Response) => {
+    const {id} = req.params;
+    if (!isObjectIdOrHexString(id)) {
+        sendResponse(res, null, 'Invalid class id', 400, 'error');
+        return;
+    }
+    try {
+        const classV = await ClassModel.findById(id).select('-__v');
+        if (classV) {
+        const classObj: any = cleanUp(classV);
+        sendResponse(
+            res,
+            classObj,
+            'Class fetched successfully',
+            200,
+            'success'
+        );
+        } else {
+        sendResponse(res, null, 'Class not found', 404, 'error');
+        }
+    } catch (e) {
+        sendResponse(res, null, 'Server error', 500, 'error');
+    }
+};
+export const updateClass = async (req: AuthenticatedReq, res: Response) => {
+    const { id } = req.params;
+    const school_id = req.user.id;
+    const { name } = req.body;
+    if (!isObjectIdOrHexString(id)) {
+      sendResponse(res, null, 'Invalid class id', 400, 'error');
+      return;
+    }
+    if (!name) {
+      sendResponse(
+        res,
+        null,
+        'Invalid request body or missing field.',
+        400,
+        'error'
+      );
+      return;
+    }
+    try {
+      const classV = await ClassModel.findOne({
+        _id: new ObjectId(id),
+        school_id,
+      }).select('-__v');
+      if (classV) {
+        classV.name = name;
+        classV.updated_at = Date.now();
+        await classV.save();
+        const classObj: any = classV.toObject();
+        sendResponse(
+          res,
+          classObj,
+          'Class updated successfully',
+          200,
+          'success'
+        );
+      } else {
+        sendResponse(res, null, 'Class not found', 404, 'error');
+      }
+    } catch (e) {
+      sendResponse(res, null, 'Server error', 500, 'error');
+    }
+  };
 export const deleteClass = async (req: AuthenticatedReq, res: Response) => {
   const {id} = req.params;
   const school_id = req.user.id;
@@ -404,17 +472,257 @@ export const updateStudent = async (req: AuthenticatedReq, res: Response) => {
     sendResponse(res, null, 'Server error', 500, 'error');
   }
 };
-export const createExam = async (req: AuthenticatedReq, res: Response) => {};
-export const getAllExam = async (req: AuthenticatedReq, res: Response) => {};
-export const getExam = async (req: AuthenticatedReq, res: Response) => {};
-export const deleteExam = async (req: AuthenticatedReq, res: Response) => {};
-export const downloadResult = async (
-  req: AuthenticatedReq,
-  res: Response
-) => {};
-export const updateExam = async (req: AuthenticatedReq, res: Response) => {};
-export const startExam = async (req: AuthenticatedReq, res: Response) => {};
-export const endExam = async (req: AuthenticatedReq, res: Response) => {};
+export const createExam = async (req: AuthenticatedReq, res: Response) => {
+    const { name, class_id, duration, to_answer } = req.body as ICreateExamReq;
+    const { id: school_id } = req.user;
+    if (!isObjectIdOrHexString(class_id)) {
+        sendResponse(res, null, 'Invalid class id', 400, 'error');
+        return;
+    }
+    if (!name || !duration || !to_answer){
+      sendResponse(
+        res,
+        null,
+        'Invalid request body or missing field.',
+        400,
+        'error'
+      );
+      return;
+    }
+    try {
+        const fetchedClass = await ClassModel.findOne({
+            _id: new ObjectId(class_id),
+            school_id,
+        });
+        if (!fetchedClass) {
+            sendResponse(res, null, 'Invalid class id', 400, 'error');
+            return;
+        }
+        if (typeof duration !== "number") {
+            sendResponse(res, null, 'Invalid duration type', 400, 'error');
+            return;
+        }
+        if (typeof to_answer !== "number") {
+            sendResponse(res, null, 'Invalid to answer type', 400, 'error');
+            return;
+        }
+        const createdExam = await ExamModel.create({
+            school_id,
+            name,
+            duration,
+            to_answer,
+            class_id,
+        });
+        const examObj: any = cleanUp(createdExam);
+        sendResponse(res, examObj, 'Exam created successfully', 201, 'success');
+    } catch (e) {
+      sendResponse(res, null, 'Server error', 500, 'error');
+    }
+};
+export const getAllExams = async (req: AuthenticatedReq, res: Response) => {
+    const { id } = req.user;
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    try {
+      const skip = (page - 1) * limit;
+      const exams = await ExamModel.find({school_id: id})
+        .select('-__v')
+        .skip(skip)
+        .limit(limit);
+      const total = await ExamModel.countDocuments();
+      const refinedExams = exams.map(exam => {
+        const examObj: any = cleanUp(exam);
+        return examObj;
+      });
+      const data = {
+        results: refinedExams,
+        total,
+        limit,
+        page,
+      };
+      sendResponse(res, data, 'Exams fetched successfully', 200, 'success');
+    } catch (e) {
+      sendResponse(res, null, 'Server error', 500, 'error');
+    }
+};
+export const getExam = async (req: AuthenticatedReq, res: Response) => {
+    const { id } = req.params;
+    if (!isObjectIdOrHexString(id)) {
+        sendResponse(res, null, 'Invalid exam id', 400, 'error');
+        return;
+    }
+    try {
+        const exam = await ExamModel.findById(id).select('-__v');
+        if (exam) {
+        const examObj: any = cleanUp(exam);
+        sendResponse(
+            res,
+            examObj,
+            'Exam fetched successfully',
+            200,
+            'success'
+        );
+        } else {
+        sendResponse(res, null, 'Exam not found', 404, 'error');
+        }
+    } catch (e) {
+        sendResponse(res, null, 'Server error', 500, 'error');
+    }
+};
+export const deleteExam = async (req: AuthenticatedReq, res: Response) => {
+    const {id} = req.params;
+    const school_id = req.user.id;
+    if (!isObjectIdOrHexString(id)) {
+        sendResponse(res, null, 'Invalid exam id', 400, 'error');
+        return;
+    }
+    try {
+        const deletedExam = await ExamModel.findOneAndDelete({
+        _id: new ObjectId(id),
+        school_id,
+        });
+        if (deletedExam) {
+        sendResponse(
+            res,
+            {id: deletedExam._id},
+            'Exam deleted successfully',
+            200,
+            'success'
+        );
+        } else {
+        sendResponse(res, null, 'Exam not found', 404, 'error');
+        }
+    } catch (e) {
+        sendResponse(res, null, 'Server error', 500, 'error');
+    }
+};
+export const updateExam = async (req: AuthenticatedReq, res: Response) => {
+    const {id} = req.params;
+    const school_id = req.user.id;
+    const { name, class_id, duration, to_answer } = req.body;
+    if (!isObjectIdOrHexString(id)) {
+        sendResponse(res, null, 'Invalid exam id', 400, 'error');
+        return;
+    }
+    if (!isObjectIdOrHexString(class_id)) {
+        sendResponse(res, null, 'Invalid class id', 400, 'error');
+        return;
+    }
+    if (!name || !duration || !to_answer) {
+        sendResponse(
+        res,
+        null,
+        'Invalid request body or missing field.',
+        400,
+        'error'
+        );
+        return;
+    }
+    try {
+        const fetchedClass = await ClassModel.findOne({
+            _id: new ObjectId(class_id),
+            school_id,
+        });
+        if (!fetchedClass) {
+            sendResponse(res, null, 'Invalid class id', 400, 'error');
+            return;
+        }
+        const exam = await ExamModel.findOne({
+            _id: new ObjectId(id),
+            school_id,
+        }).select('-__v');
+        if (exam) {
+        exam.name = name;
+        exam.duration = duration;
+        exam.to_answer = to_answer;
+        exam.class_id = class_id;
+        exam.updated_at = Date.now();
+        await exam.save();
+        const examObj: any = exam.toObject();
+        sendResponse(
+            res,
+            examObj,
+            'Exam updated successfully',
+            200,
+            'success'
+        );
+        } else {
+        sendResponse(res, null, 'Exam not found', 404, 'error');
+        }
+    } catch (e) {
+        sendResponse(res, null, 'Server error', 500, 'error');
+    }
+};
+export const startExam = async (req: AuthenticatedReq, res: Response) => {
+    const {id} = req.params;
+    const school_id = req.user.id;
+    if (!isObjectIdOrHexString(id)) {
+        sendResponse(res, null, 'Invalid exam id', 400, 'error');
+        return;
+    }
+    try {
+        const exam = await ExamModel.findOne({
+            _id: new ObjectId(id),
+            school_id,
+        }).select('-__v');
+        if (exam) {
+            if(exam.is_available) {
+                sendResponse(res, null, 'Exam started already', 400, 'error');
+                return;
+            }
+            exam.is_available = true;
+            exam.updated_at = Date.now();
+            await exam.save();
+            const examObj: any = exam.toObject();
+            sendResponse(
+                res,
+                examObj,
+                'Exam started successfully',
+                200,
+                'success'
+            );
+        } else {
+        sendResponse(res, null, 'Exam not found', 404, 'error');
+        }
+    } catch (e) {
+        sendResponse(res, null, 'Server error', 500, 'error');
+    }
+};
+export const endExam = async (req: AuthenticatedReq, res: Response) => {
+    const {id} = req.params;
+    const school_id = req.user.id;
+    if (!isObjectIdOrHexString(id)) {
+        sendResponse(res, null, 'Invalid exam id', 400, 'error');
+        return;
+    }
+    try {
+        const exam = await ExamModel.findOne({
+            _id: new ObjectId(id),
+            school_id,
+        }).select('-__v');
+        if (exam) {
+            if(!exam.is_available) {
+                sendResponse(res, null, 'Exam ended already', 400, 'error');
+                return;
+            }
+            exam.is_available = false;
+            exam.updated_at = Date.now();
+            await exam.save();
+            const examObj: any = exam.toObject();
+            sendResponse(
+                res,
+                examObj,
+                'Exam ended successfully',
+                200,
+                'success'
+            );
+        } else {
+        sendResponse(res, null, 'Exam not found', 404, 'error');
+        }
+    } catch (e) {
+        sendResponse(res, null, 'Server error', 500, 'error');
+    }
+};
 export const createExamQuestion = async (
   req: AuthenticatedReq,
   res: Response
@@ -434,4 +742,8 @@ export const updateExamQuestion = async (
 export const deleteExamQuestion = async (
   req: AuthenticatedReq,
   res: Response
+) => {};
+export const downloadResult = async (
+    req: AuthenticatedReq,
+    res: Response
 ) => {};

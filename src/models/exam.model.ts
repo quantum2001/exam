@@ -29,6 +29,7 @@ const examSchema = new Schema({
   updated_at: {
     type: Number,
     required: true,
+    default: Date.now(),
   },
   class_id: {
     type: String,
