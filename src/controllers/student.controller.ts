@@ -1,16 +1,8 @@
-import { Request, Response } from "express";
+import {Request, Response} from 'express';
 interface AuthenticatedReq extends Request {
-    user?: any
+  user?: any;
 }
-export const login = (req: Request, res: Response) => {
-
-}
-export const startExam = (req: AuthenticatedReq, res: Response) => {
-
-}
-export const endExam = (req: AuthenticatedReq, res: Response) => {
-
-}
-export const submitAnswer = (req: AuthenticatedReq, res: Response) => {
-
-}
+export const login = async (req: Request, res: Response) => {};
+export const startExam = async (req: AuthenticatedReq, res: Response) => {};
+export const endExam = async (req: AuthenticatedReq, res: Response) => {};
+export const submitAnswer = async (req: AuthenticatedReq, res: Response) => {};

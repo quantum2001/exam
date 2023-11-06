@@ -1,6 +1,6 @@
-import winston from "winston";
-import expressWinston from "express-winston";
-import DailyRotateFile from "winston-daily-rotate-file";
+import winston from 'winston';
+import expressWinston from 'express-winston';
+import DailyRotateFile from 'winston-daily-rotate-file';
 
 // Create the transport for daily rotating log files
 const transport = new DailyRotateFile({
@@ -14,17 +14,17 @@ const transport = new DailyRotateFile({
 
 // Creates a logger instance
 const logger = winston.createLogger({
-    level: "info",
-    format: winston.format.combine(
-        winston.format.timestamp(),
-        winston.format.json()
-    ),
-    transports: [transport],
-})
+  level: 'info',
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.json()
+  ),
+  transports: [transport],
+});
 if (process.env.NODE_ENV !== 'production') {
-    logger.add(new winston.transports.Console())
+  logger.add(new winston.transports.Console());
 }
 
-export const expressLogger = expressWinston.logger({ winstonInstance: logger });
+export const expressLogger = expressWinston.logger({winstonInstance: logger});
 
 export default logger;
