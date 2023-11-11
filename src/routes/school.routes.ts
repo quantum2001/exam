@@ -15,11 +15,13 @@ import {
   getAllExamQuestions,
   getAllExams,
   getAllStudents,
+  getAllStudentsByClass,
   getClass,
   getExam,
   getSchool,
   getSingleExamQuestion,
   getStudent,
+  gradeExam,
   login,
   register,
   startExam,
@@ -49,9 +51,11 @@ authSchoolRouter.get('/classes', getAllClasses);
 authSchoolRouter.delete('/classes/:id', deleteClass);
 authSchoolRouter.get('/classes/:id', getClass);
 authSchoolRouter.patch('/classes/:id', updateClass);
+authSchoolRouter.get('/classes/:id/students', getAllStudentsByClass);
 authSchoolRouter.post('/exams', createExam);
 authSchoolRouter.get('/exams', getAllExams);
 authSchoolRouter.get('/exams/:id', getExam);
+authSchoolRouter.post('/exams/:id/grade', gradeExam);
 authSchoolRouter.get('/exams/:id/download', downloadResult);
 authSchoolRouter.patch('/exams/:id', updateExam);
 authSchoolRouter.delete('/exams/:id', deleteExam);

@@ -1,9 +1,8 @@
 import {Router} from 'express';
 import {verifyStudent} from '../middlewares/auth.middleware';
 import {
-  endExam,
+  getAllSchools,
   login,
-  startExam,
   submitAnswer,
 } from '../controllers/student.controller';
 
@@ -12,11 +11,10 @@ const authStudentRouter = Router();
 
 // Unauthenicated
 studentRouter.post('/login', login);
+studentRouter.get('/schools', getAllSchools);
 
 // Authenticated
-authStudentRouter.post('/start-exam', startExam);
-authStudentRouter.post('/end-exam', endExam);
-authStudentRouter.post('/submit-answer', submitAnswer);
+authStudentRouter.post('/answer/:session_id', submitAnswer);
 
 // Including middleware to auth routes
 studentRouter.use('/', verifyStudent, authStudentRouter);

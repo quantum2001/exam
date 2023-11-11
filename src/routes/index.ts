@@ -1,7 +1,7 @@
 import {Router} from 'express';
-import adminRouter from './admin.route';
-import studentRouter from './student.route';
-import schoolRouter from './school.route';
+import adminRouter from './admin.routes';
+import studentRouter from './student.routes';
+import schoolRouter from './school.routes';
 
 const v1Router = Router();
 v1Router.use('/admin', adminRouter);

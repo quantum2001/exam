@@ -5,6 +5,10 @@ const examSessionSchema = new Schema({
     type: String,
     required: [true, 'exam id required'],
   },
+  school_id: {
+    type: String,
+    required: [true, 'school id required'],
+  },
   start_time: {
     type: Number,
     default: Date.now(),

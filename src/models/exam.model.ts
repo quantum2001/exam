@@ -11,11 +11,16 @@ const examSchema = new Schema({
   },
   to_answer: {
     type: Number,
+    required: true,
   },
   is_available: {
     type: Boolean,
     required: true,
     default: false,
+  },
+  description: {
+    type: String,
+    required: true,
   },
   duration: {
     type: Number,

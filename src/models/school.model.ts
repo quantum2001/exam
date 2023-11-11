@@ -12,6 +12,7 @@ const schoolSchema = new Schema({
   email: {
     type: String,
     required: [true, 'email required'],
+    unique: true,
   },
   logo: {
     type: String,
@@ -23,7 +24,7 @@ const schoolSchema = new Schema({
   },
   is_disabled: {
     type: Boolean,
-    default: false,
+    default: true,
   },
   created_at: {
     type: Number,

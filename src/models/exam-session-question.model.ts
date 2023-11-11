@@ -1,7 +1,11 @@
 import {Schema, model} from 'mongoose';
 
 const questionSchema = new Schema({
-  exam_question_id: {
+  question_id: {
+    type: String,
+    required: true,
+  },
+  question: {
     type: String,
     required: true,
   },
@@ -11,11 +15,6 @@ const questionSchema = new Schema({
     enum: ['german', 'option'],
   },
   options: [String],
-  created_at: {
-    type: Number,
-    required: true,
-    default: Date.now(),
-  },
 });
 
 const examSessionQuestionSchema = new Schema({

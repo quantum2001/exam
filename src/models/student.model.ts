@@ -1,4 +1,4 @@
-import {Schema, model} from 'mongoose';
+import mongoose, {Schema, model} from 'mongoose';
 
 const studentSchema = new Schema({
   firstname: {
@@ -10,8 +10,9 @@ const studentSchema = new Schema({
     required: [true, 'student lastname required'],
   },
   middlename: String,
-  class_id: {
-    type: String,
+  class: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Class',
     required: [true, 'class id required'],
   },
   access_id: {

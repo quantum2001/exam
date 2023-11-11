@@ -5,6 +5,10 @@ const examQuestionSchema = new Schema({
     required: [true, 'exam id required'],
     type: String,
   },
+  school_id: {
+    required: [true, 'school id required'],
+    type: String,
+  },
   question: {
     required: [true, 'exam question required'],
     type: String,

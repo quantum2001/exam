@@ -1,31 +1,19 @@
-import {Schema, model} from 'mongoose';
+import mongoose, {Schema, model} from 'mongoose';
 
 const answerSchema = new Schema({
-  exam_question_id: {
-    type: String,
-    required: true,
+  exam_question: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'ExamQuestion',
   },
   selected_answer: {
     type: String,
-    required: true,
   },
-});
-const miniStudentSchema = new Schema({
-  class: String,
-  firstname: String,
-  lastname: String,
-  middlename: String,
-  access_id: Number,
 });
 
 const examSessionAnswerSchema = new Schema({
   exam_session_id: {
     type: String,
     required: [true, 'exam session id required'],
-  },
-  student_id: {
-    type: String,
-    required: [true, 'student id required'],
   },
   school_id: {
     type: String,
@@ -35,7 +23,10 @@ const examSessionAnswerSchema = new Schema({
     type: String,
     required: [true, 'exam id required'],
   },
-  student: miniStudentSchema,
+  student: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Student',
+  },
   score: Number,
   graded: {
     type: Boolean,
@@ -48,6 +39,7 @@ const examSessionAnswerSchema = new Schema({
   },
   updated_at: {
     type: Number,
+    default: Date.now(),
     required: true,
   },
 });
