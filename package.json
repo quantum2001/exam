@@ -15,6 +15,9 @@
     "start": "node ./build/src/index.js",
     "serve": "npm run compile && npm run start"
   },
+  "resolutions": {
+    "engine.io": "6.5.1"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
