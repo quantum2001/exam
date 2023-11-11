@@ -9,6 +9,8 @@
     "clean": "gts clean",
     "fix": "gts fix",
     "dev": "nodemon src/app.ts",
+    "prepare": "npm run compile",
+    "pretest": "npm run compile",
     "posttest": "npm run lint",
     "start": "node ./build/src/index.js",
     "serve": "npm run compile && npm run start"
