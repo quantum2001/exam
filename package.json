@@ -15,9 +15,6 @@
     "start": "node ./build/src/index.js",
     "serve": "npm run compile && npm run start"
   },
-  "resolutions": {
-    "engine.io": "6.5.1"
-  },
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -31,7 +28,7 @@
     "gts": "^5.2.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^7.6.3",
-    "socket.io": "^4.7.2",
+    "socket.io": "^4.6.2",
     "typescript": "^5.2.2",
     "winston": "^3.11.0",
     "winston-daily-rotate-file": "^4.7.1"
