@@ -13,6 +13,9 @@
     "start": "node ./build/src/index.js",
     "serve": "npm run compile && npm run start"
   },
+  "engines": {
+    "node": ">=18.17.1 <19.0.0"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
