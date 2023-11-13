@@ -221,9 +221,10 @@ export const getAllClasses = async (req: AuthenticatedReq, res: Response) => {
   const {id} = req.user;
   try {
     const classes = await ClassModel.find({school_id: id}).select('-__v');
-    const refinedClasses = classes.map(classV => {
+    const refinedClasses = classes.map(async (classV) => {
       const classObj: any = cleanUp(classV);
-      return classObj;
+      const count = await StudentModel.countDocuments({ class: classV._id })
+      return {...classObj, total_students: count};
     });
     const data = {
       results: refinedClasses,
@@ -243,7 +244,8 @@ export const getClass = async (req: AuthenticatedReq, res: Response) => {
     const classV = await ClassModel.findById(id).select('-__v');
     if (classV) {
       const classObj: any = cleanUp(classV);
-      sendResponse(res, classObj, 'Class fetched successfully', 200, 'success');
+      const count = await StudentModel.countDocuments({ class: classV._id })
+      sendResponse(res, {...classObj, total_students: count}, 'Class fetched successfully', 200, 'success');
     } else {
       sendResponse(res, null, 'Class not found', 404, 'error');
     }
