@@ -52,7 +52,8 @@ export const getAllSchools = async (req: Request, res: Response) => {
       limit,
     };
     sendResponse(res, data, 'Schools fetched successfully', 200, 'success');
-  } catch (e) {
+  } catch (e: any) {
+    logger.error(e?.message);
     sendResponse(res, null, 'Server error', 500, 'error');
   }
 };
@@ -76,7 +77,8 @@ export const getSingleSchool = async (req: Request, res: Response) => {
     } else {
       sendResponse(res, null, 'School not found', 404, 'error');
     }
-  } catch (e) {
+  } catch (e: any) {
+    logger.error(e?.message);
     sendResponse(res, null, 'Server error', 500, 'error');
   }
 };
@@ -103,7 +105,8 @@ export const disableSchool = async (req: Request, res: Response) => {
     } else {
       sendResponse(res, null, 'School not found', 404, 'error');
     }
-  } catch (e) {
+  } catch (e: any) {
+    logger.error(e?.message);
     sendResponse(res, null, 'Server error', 500, 'error');
   }
 };
@@ -130,7 +133,8 @@ export const enableSchool = async (req: Request, res: Response) => {
     } else {
       sendResponse(res, null, 'School not found', 404, 'error');
     }
-  } catch (e) {
+  } catch (e: any) {
+    logger.error(e?.message);
     sendResponse(res, null, 'Server error', 500, 'error');
   }
 };
@@ -153,7 +157,8 @@ export const deleteSchool = async (req: Request, res: Response) => {
     } else {
       sendResponse(res, null, 'School not found', 404, 'error');
     }
-  } catch (e) {
+  } catch (e: any) {
+    logger.error(e?.message);
     sendResponse(res, null, 'Server error', 500, 'error');
   }
 };

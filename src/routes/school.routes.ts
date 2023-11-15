@@ -18,6 +18,7 @@ import {
   getAllStudentsByClass,
   getClass,
   getExam,
+  getRecentStudents,
   getSchool,
   getSingleExamQuestion,
   getStudent,
@@ -43,6 +44,7 @@ authSchoolRouter.patch('/me', updateSchool);
 authSchoolRouter.get('/me', getSchool);
 authSchoolRouter.post('/students', createStudent);
 authSchoolRouter.get('/students', getAllStudents);
+authSchoolRouter.get('/students/recent', getRecentStudents);
 authSchoolRouter.get('/students/:id', getStudent);
 authSchoolRouter.patch('/students/:id', updateStudent);
 authSchoolRouter.delete('/students/:id', deleteStudent);
@@ -61,11 +63,11 @@ authSchoolRouter.patch('/exams/:id', updateExam);
 authSchoolRouter.delete('/exams/:id', deleteExam);
 authSchoolRouter.post('/exams/:id/start', startExam);
 authSchoolRouter.post('/exams/:id/end', endExam);
-authSchoolRouter.post('/exams/questions', createExamQuestion);
-authSchoolRouter.get('/exams/questions/all/:exam_id', getAllExamQuestions);
-authSchoolRouter.get('/exams/questions/:id', getSingleExamQuestion);
-authSchoolRouter.patch('/exams/questions/:id', updateExamQuestion);
-authSchoolRouter.delete('/exams/questions/:id', deleteExamQuestion);
+authSchoolRouter.post('/exams/:exam_id/questions', createExamQuestion);
+authSchoolRouter.get('/exams/:exam_id/questions/all', getAllExamQuestions);
+authSchoolRouter.get('/exams/:exam_id/questions/:id', getSingleExamQuestion);
+authSchoolRouter.patch('/exams/:exam_id/questions/:id', updateExamQuestion);
+authSchoolRouter.delete('/exams/:exam_id/questions/:id', deleteExamQuestion);
 
 // Including middleware to auth routes
 schoolRouter.use('/', verifySchool, authSchoolRouter);

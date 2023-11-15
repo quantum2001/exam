@@ -7,6 +7,7 @@ import {connectsDB} from './utils/db.util';
 import dotenv from 'dotenv';
 import {Server} from 'socket.io';
 import {examSocketController} from './controllers/socket.controller';
+import cors from "cors"
 dotenv.config();
 
 const app = express();
@@ -19,7 +20,7 @@ const port = process.env.PORT || 5000;
 app.use(expressLogger);
 app.use(express.urlencoded({extended: true}));
 app.use(express.json());
-
+app.use(cors());
 app.use('/api/v1', v1Router);
 
 async function startServer() {

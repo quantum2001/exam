@@ -10,6 +10,7 @@ import mongoose, {isObjectIdOrHexString} from 'mongoose';
 import logger from '../utils/logger.util';
 import ESAnswerModel from '../models/exam-session-answer.model';
 import ESQuestionModel from '../models/exam-session-question.model';
+import ExamModel from '../models/exam.model';
 const ObjectId = mongoose.Types.ObjectId;
 interface AuthenticatedReq extends Request {
   user?: any;
@@ -51,7 +52,8 @@ export const login = async (req: Request, res: Response) => {
       sendResponse(res, null, 'Invalid credentials', 400, 'error');
       return;
     }
-  } catch (e) {
+  } catch (e: any) {
+    logger.error(e?.message);
     sendResponse(res, null, 'Server error', 500, 'error');
   }
 };
@@ -161,7 +163,28 @@ export const getAllSchools = async (req: Request, res: Response) => {
       total,
     };
     sendResponse(res, data, 'Schools fetched successfully', 200, 'success');
-  } catch (e) {
+  } catch (e: any) {
+    logger.error(e?.message);
+    sendResponse(res, null, 'Server error', 500, 'error');
+  }
+};
+export const getAllExams = async (req: AuthenticatedReq, res: Response) => {
+  const { id, class_id } = req.user;
+  try {
+    const exams = await ExamModel.find({school_id: id, class_id, is_available: true })
+      .select('-__v')
+    const total = await ExamModel.countDocuments({school_id: id, class_id, is_available: true });
+    const refinedExams = exams.map(exam => {
+      const examObj: any = cleanUp(exam);
+      return examObj;
+    });
+    const data = {
+      results: refinedExams,
+      total
+    };
+    sendResponse(res, data, 'Exams fetched successfully', 200, 'success');
+  } catch (e: any) {
+    logger.error(e?.message);
     sendResponse(res, null, 'Server error', 500, 'error');
   }
 };

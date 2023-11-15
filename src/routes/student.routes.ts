@@ -1,6 +1,7 @@
 import {Router} from 'express';
 import {verifyStudent} from '../middlewares/auth.middleware';
 import {
+  getAllExams,
   getAllSchools,
   login,
   submitAnswer,
@@ -15,6 +16,7 @@ studentRouter.get('/schools', getAllSchools);
 
 // Authenticated
 authStudentRouter.post('/answer/:session_id', submitAnswer);
+authStudentRouter.post('/exams', getAllExams);
 
 // Including middleware to auth routes
 studentRouter.use('/', verifyStudent, authStudentRouter);

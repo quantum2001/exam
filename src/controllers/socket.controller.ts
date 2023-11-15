@@ -72,6 +72,8 @@ export const examSocketController = (io: Server) => {
                   message: 'exam started',
                   data: {
                     session_id: examSession.id,
+                    exam_name: exam.name,
+                    duration: exam.duration,
                     questions: sessionQuestions?.questions,
                   },
                 });
@@ -150,6 +152,8 @@ export const examSocketController = (io: Server) => {
                     message: 'exam started',
                     data: {
                       exam_session_id: examSession.id,
+                      exam_name: exam.name,
+                      duration: exam.duration,
                       questions,
                     },
                   });

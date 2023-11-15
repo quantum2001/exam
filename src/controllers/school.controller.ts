@@ -20,6 +20,7 @@ import {ICreateExamQuestReq, ICreateExamReq} from '../dtos/exam.dto';
 import ExamModel from '../models/exam.model';
 import ExamQuestionModel from '../models/exam-question.model';
 import ESAnswerModel from '../models/exam-session-answer.model';
+import logger from '../utils/logger.util';
 const ObjectId = mongoose.Types.ObjectId;
 interface AuthenticatedReq extends Request {
   user?: any;
@@ -62,7 +63,8 @@ export const register = async (req: Request, res: Response) => {
     });
     sendResponse(res, null, 'Registeration successful', 201, 'success');
     return;
-  } catch (e) {
+  } catch (e: any) {
+    logger.error(e?.message);
     sendResponse(res, null, 'Server error', 500, 'error');
   }
 };
@@ -116,7 +118,8 @@ export const login = async (req: Request, res: Response) => {
       sendResponse(res, null, 'Invalid credentials', 400, 'error');
       return;
     }
-  } catch (e) {
+  } catch (e: any) {
+    logger.error(e?.message);
     sendResponse(res, null, 'Server error', 500, 'error');
   }
 };
@@ -153,7 +156,8 @@ export const getSchool = async (req: AuthenticatedReq, res: Response) => {
     } else {
       sendResponse(res, null, 'School not found', 404, 'error');
     }
-  } catch (e) {
+  } catch (e: any) {
+    logger.error(e?.message);
     sendResponse(res, null, 'Server error', 500, 'error');
   }
 };
@@ -175,6 +179,7 @@ export const updateSchool = async (req: AuthenticatedReq, res: Response) => {
     if (school) {
       school.address = address;
       school.name = name;
+      school.logo = `https://ui-avatars.com/api/?name=${name}&color=00b4d8&background=fff&w=96q=100`;
       school.updated_at = Date.now();
       await school.save();
       const schoolObj: any = cleanUp(school);
@@ -189,7 +194,8 @@ export const updateSchool = async (req: AuthenticatedReq, res: Response) => {
     } else {
       sendResponse(res, null, 'School not found', 404, 'error');
     }
-  } catch (e) {
+  } catch (e: any) {
+    logger.error(e?.message);
     sendResponse(res, null, 'Server error', 500, 'error');
   }
 };
@@ -213,7 +219,8 @@ export const createClass = async (req: AuthenticatedReq, res: Response) => {
     });
     const classObj: any = cleanUp(createdClass);
     sendResponse(res, classObj, 'Class created successfully', 201, 'success');
-  } catch (e) {
+  } catch (e: any) {
+    logger.error(e?.message);
     sendResponse(res, null, 'Server error', 500, 'error');
   }
 };
@@ -221,16 +228,18 @@ export const getAllClasses = async (req: AuthenticatedReq, res: Response) => {
   const {id} = req.user;
   try {
     const classes = await ClassModel.find({school_id: id}).select('-__v');
-    const refinedClasses = classes.map(async (classV) => {
+    const refinedClassesPromises = classes.map(async (classV) => {
       const classObj: any = cleanUp(classV);
       const count = await StudentModel.countDocuments({ class: classV._id })
       return {...classObj, total_students: count};
     });
+    const refinedClasses = await Promise.all(refinedClassesPromises);
     const data = {
       results: refinedClasses,
     };
     sendResponse(res, data, 'Classes fetched successfully', 200, 'success');
-  } catch (e) {
+  } catch (e: any) {
+    logger.error(e?.message);
     sendResponse(res, null, 'Server error', 500, 'error');
   }
 };
@@ -249,7 +258,8 @@ export const getClass = async (req: AuthenticatedReq, res: Response) => {
     } else {
       sendResponse(res, null, 'Class not found', 404, 'error');
     }
-  } catch (e) {
+  } catch (e: any) {
+    logger.error(e?.message);
     sendResponse(res, null, 'Server error', 500, 'error');
   }
 };
@@ -285,7 +295,8 @@ export const updateClass = async (req: AuthenticatedReq, res: Response) => {
     } else {
       sendResponse(res, null, 'Class not found', 404, 'error');
     }
-  } catch (e) {
+  } catch (e: any) {
+    logger.error(e?.message);
     sendResponse(res, null, 'Server error', 500, 'error');
   }
 };
@@ -293,6 +304,17 @@ export const deleteClass = async (req: AuthenticatedReq, res: Response) => {
   const {id} = req.params;
   const school_id = req.user.id;
   try {
+    const count = await StudentModel.countDocuments({ class: id });
+    if(count) {
+      sendResponse(
+        res,
+        null,
+        'You can\'t delete a class with students',
+        400,
+        'error'
+      );
+      return;
+    }
     const deletedClass = await ClassModel.findOneAndDelete({
       _id: new ObjectId(id),
       school_id,
@@ -308,7 +330,8 @@ export const deleteClass = async (req: AuthenticatedReq, res: Response) => {
     } else {
       sendResponse(res, null, 'Class not found', 404, 'error');
     }
-  } catch (e) {
+  } catch (e: any) {
+    logger.error(e?.message);
     sendResponse(res, null, 'Server error', 500, 'error');
   }
 };
@@ -339,7 +362,7 @@ export const createStudent = async (req: AuthenticatedReq, res: Response) => {
       sendResponse(res, null, 'Invalid class id', 400, 'error');
       return;
     }
-    const password = generateAlphanumericPassword(6);
+    const password: string = generateAlphanumericPassword(6);
     const highestStudentAccessId =
       await StudentModel.findOne().sort('-access_id');
     const access_id = highestStudentAccessId
@@ -354,6 +377,8 @@ export const createStudent = async (req: AuthenticatedReq, res: Response) => {
       image: `https://ui-avatars.com/api/?name=${firstname} ${lastname}&color=00b4d8&background=fff&w=96q=100`,
       password,
       access_id,
+      created_at: Date.now(),
+      updated_at: Date.now(),
     });
     const studentObj = cleanUp(student);
     sendResponse(
@@ -363,7 +388,8 @@ export const createStudent = async (req: AuthenticatedReq, res: Response) => {
       201,
       'success'
     );
-  } catch (e) {
+  } catch (e: any) {
+    logger.error(e?.message);
     sendResponse(res, null, 'Server error', 500, 'error');
   }
 };
@@ -392,7 +418,8 @@ export const getStudent = async (req: AuthenticatedReq, res: Response) => {
     } else {
       sendResponse(res, null, 'Student not found', 404, 'error');
     }
-  } catch (e) {
+  } catch (e: any) {
+    logger.error(e?.message);
     sendResponse(res, null, 'Server error', 500, 'error');
   }
 };
@@ -407,6 +434,7 @@ export const getAllStudents = async (req: AuthenticatedReq, res: Response) => {
         path: 'class',
         select: 'name',
       })
+      .sort('-created_at')
       .select('-__v')
       .skip(skip)
       .limit(limit);
@@ -422,7 +450,8 @@ export const getAllStudents = async (req: AuthenticatedReq, res: Response) => {
       page,
     };
     sendResponse(res, data, 'Students fetched successfully', 200, 'success');
-  } catch (e) {
+  } catch (e: any) {
+    logger.error(e?.message);
     sendResponse(res, null, 'Server error', 500, 'error');
   }
 };
@@ -454,7 +483,8 @@ export const getRecentStudents = async (
       200,
       'success'
     );
-  } catch (e) {
+  } catch (e: any) {
+    logger.error(e?.message);
     sendResponse(res, null, 'Server error', 500, 'error');
   }
 };
@@ -494,7 +524,8 @@ export const getAllStudentsByClass = async (
       page,
     };
     sendResponse(res, data, 'Students fetched successfully', 200, 'success');
-  } catch (e) {
+  } catch (e: any) {
+    logger.error(e?.message);
     sendResponse(res, null, 'Server error', 500, 'error');
   }
 };
@@ -521,7 +552,8 @@ export const deleteStudent = async (req: AuthenticatedReq, res: Response) => {
     } else {
       sendResponse(res, null, 'Student not found', 404, 'error');
     }
-  } catch (e) {
+  } catch (e: any) {
+    logger.error(e?.message);
     sendResponse(res, null, 'Server error', 500, 'error');
   }
 };
@@ -574,7 +606,8 @@ export const updateStudent = async (req: AuthenticatedReq, res: Response) => {
     } else {
       sendResponse(res, null, 'Student not found', 404, 'error');
     }
-  } catch (e) {
+  } catch (e: any) {
+    logger.error(e?.message);
     sendResponse(res, null, 'Server error', 500, 'error');
   }
 };
@@ -629,12 +662,15 @@ export const createExam = async (req: AuthenticatedReq, res: Response) => {
       to_answer,
       class_id,
       description,
+      created_at: Date.now(),
+      updated_at: Date.now(),
     });
     const examObj: any = cleanUp(createdExam);
     school.exam_limit = school.exam_limit - 1;
     await school.save();
     sendResponse(res, examObj, 'Exam created successfully', 201, 'success');
-  } catch (e) {
+  } catch (e: any) {
+    logger.error(e?.message);
     sendResponse(res, null, 'Server error', 500, 'error');
   }
 };
@@ -645,6 +681,7 @@ export const getAllExams = async (req: AuthenticatedReq, res: Response) => {
   try {
     const skip = (page - 1) * limit;
     const exams = await ExamModel.find({school_id: id})
+      .sort('-created_at')
       .select('-__v')
       .skip(skip)
       .limit(limit);
@@ -660,7 +697,8 @@ export const getAllExams = async (req: AuthenticatedReq, res: Response) => {
       page,
     };
     sendResponse(res, data, 'Exams fetched successfully', 200, 'success');
-  } catch (e) {
+  } catch (e: any) {
+    logger.error(e?.message);
     sendResponse(res, null, 'Server error', 500, 'error');
   }
 };
@@ -678,7 +716,8 @@ export const getExam = async (req: AuthenticatedReq, res: Response) => {
     } else {
       sendResponse(res, null, 'Exam not found', 404, 'error');
     }
-  } catch (e) {
+  } catch (e: any) {
+    logger.error(e?.message);
     sendResponse(res, null, 'Server error', 500, 'error');
   }
 };
@@ -705,14 +744,15 @@ export const deleteExam = async (req: AuthenticatedReq, res: Response) => {
     } else {
       sendResponse(res, null, 'Exam not found', 404, 'error');
     }
-  } catch (e) {
+  } catch (e: any) {
+    logger.error(e?.message);
     sendResponse(res, null, 'Server error', 500, 'error');
   }
 };
 export const updateExam = async (req: AuthenticatedReq, res: Response) => {
   const {id} = req.params;
   const school_id = req.user.id;
-  const {name, class_id, duration, to_answer} = req.body;
+  const {name, class_id, duration, to_answer, description } = req.body;
   if (!isObjectIdOrHexString(id)) {
     sendResponse(res, null, 'Invalid exam id', 400, 'error');
     return;
@@ -721,7 +761,7 @@ export const updateExam = async (req: AuthenticatedReq, res: Response) => {
     sendResponse(res, null, 'Invalid class id', 400, 'error');
     return;
   }
-  if (!name || !duration || !to_answer) {
+  if (!name || !duration || !to_answer || !description) {
     sendResponse(
       res,
       null,
@@ -749,6 +789,7 @@ export const updateExam = async (req: AuthenticatedReq, res: Response) => {
       exam.duration = duration;
       exam.to_answer = to_answer;
       exam.class_id = class_id;
+      exam.description = description;
       exam.updated_at = Date.now();
       await exam.save();
       const examObj: any = exam.toObject();
@@ -756,7 +797,8 @@ export const updateExam = async (req: AuthenticatedReq, res: Response) => {
     } else {
       sendResponse(res, null, 'Exam not found', 404, 'error');
     }
-  } catch (e) {
+  } catch (e: any) {
+    logger.error(e?.message);
     sendResponse(res, null, 'Server error', 500, 'error');
   }
 };
@@ -799,7 +841,8 @@ export const startExam = async (req: AuthenticatedReq, res: Response) => {
     } else {
       sendResponse(res, null, 'Exam not found', 404, 'error');
     }
-  } catch (e) {
+  } catch (e: any) {
+    logger.error(e?.message);
     sendResponse(res, null, 'Server error', 500, 'error');
   }
 };
@@ -828,7 +871,8 @@ export const endExam = async (req: AuthenticatedReq, res: Response) => {
     } else {
       sendResponse(res, null, 'Exam not found', 404, 'error');
     }
-  } catch (e) {
+  } catch (e: any) {
+    logger.error(e?.message);
     sendResponse(res, null, 'Server error', 500, 'error');
   }
 };
@@ -838,13 +882,13 @@ export const createExamQuestion = async (
 ) => {
   const {
     question,
-    exam_id,
     image: rImage,
     options,
     type,
     answer,
   } = req.body as ICreateExamQuestReq;
   const {id: school_id} = req.user;
+  const { exam_id } = req.params;
   if (!question || !answer || !type || !exam_id) {
     sendResponse(
       res,
@@ -955,7 +999,8 @@ export const getAllExamQuestions = async (
       200,
       'success'
     );
-  } catch (e) {
+  } catch (e: any) {
+    logger.error(e?.message);
     sendResponse(res, null, 'Server error', 500, 'error');
   }
 };
@@ -963,10 +1008,14 @@ export const getSingleExamQuestion = async (
   req: AuthenticatedReq,
   res: Response
 ) => {
-  const {id} = req.params;
+  const {id, exam_id} = req.params;
   const {id: school_id} = req.user;
   if (!isObjectIdOrHexString(id)) {
     sendResponse(res, null, 'Invalid exam question id', 400, 'error');
+    return;
+  }
+  if (!isObjectIdOrHexString(exam_id)) {
+    sendResponse(res, null, 'Invalid exam id', 400, 'error');
     return;
   }
   try {
@@ -974,6 +1023,7 @@ export const getSingleExamQuestion = async (
     const exam = await ExamQuestionModel.findOne({
       _id: new ObjectId(id),
       school_id,
+      exam_id,
     }).select('-__v');
     if (exam) {
       const examObj: any = cleanUp(exam);
@@ -987,7 +1037,8 @@ export const getSingleExamQuestion = async (
     } else {
       sendResponse(res, null, 'Exam question not found', 404, 'error');
     }
-  } catch (e) {
+  } catch (e: any) {
+    logger.error(e?.message);
     sendResponse(res, null, 'Server error', 500, 'error');
   }
 };
@@ -995,11 +1046,15 @@ export const updateExamQuestion = async (
   req: AuthenticatedReq,
   res: Response
 ) => {
-  const {id} = req.params;
+  const {id, exam_id} = req.params;
   const {id: school_id} = req.user;
   const {question, image: rImage, options, type, answer} = req.body;
   if (!isObjectIdOrHexString(id)) {
     sendResponse(res, null, 'Invalid exam question id', 400, 'error');
+    return;
+  }
+  if (!isObjectIdOrHexString(exam_id)) {
+    sendResponse(res, null, 'Invalid exam id', 400, 'error');
     return;
   }
   if (!question || !answer || !type) {
@@ -1030,6 +1085,7 @@ export const updateExamQuestion = async (
     const examQuestion = await ExamQuestionModel.findOne({
       _id: new ObjectId(id),
       school_id,
+      exam_id
     }).select('-__v');
     if (examQuestion) {
       examQuestion.question = question;
@@ -1049,7 +1105,8 @@ export const updateExamQuestion = async (
     } else {
       sendResponse(res, null, 'Exam not found', 404, 'error');
     }
-  } catch (e) {
+  } catch (e: any) {
+    logger.error(e?.message);
     sendResponse(res, null, 'Server error', 500, 'error');
   }
 };
@@ -1057,16 +1114,21 @@ export const deleteExamQuestion = async (
   req: AuthenticatedReq,
   res: Response
 ) => {
-  const {id} = req.params;
+  const {id, exam_id} = req.params;
   const {id: school_id} = req.user;
   if (!isObjectIdOrHexString(id)) {
     sendResponse(res, null, 'Invalid exam question id', 400, 'error');
+    return;
+  }
+  if (!isObjectIdOrHexString(exam_id)) {
+    sendResponse(res, null, 'Invalid exam id', 400, 'error');
     return;
   }
   try {
     const deletedExamQuestion = await ExamQuestionModel.findOneAndDelete({
       _id: new ObjectId(id),
       school_id,
+      exam_id,
     });
     if (deletedExamQuestion) {
       sendResponse(
@@ -1079,7 +1141,8 @@ export const deleteExamQuestion = async (
     } else {
       sendResponse(res, null, 'Exam question not found', 404, 'error');
     }
-  } catch (e) {
+  } catch (e: any) {
+    logger.error(e?.message);
     sendResponse(res, null, 'Server error', 500, 'error');
   }
 };
@@ -1120,7 +1183,8 @@ export const gradeExam = async (req: AuthenticatedReq, res: Response) => {
       await studentAnswer.save();
     });
     sendResponse(res, {}, 'Exam sessions graded', 200, 'success');
-  } catch (e) {
+  } catch (e: any) {
+    logger.error(e?.message);
     sendResponse(res, null, 'Server error', 500, 'error');
   }
 };
@@ -1158,7 +1222,8 @@ export const downloadResult = async (req: AuthenticatedReq, res: Response) => {
       200,
       'success'
     );
-  } catch (e) {
+  } catch (e: any) {
+    logger.error(e?.message);
     sendResponse(res, null, 'Server error', 500, 'error');
   }
 };
