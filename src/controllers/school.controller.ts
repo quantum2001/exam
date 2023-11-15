@@ -938,6 +938,7 @@ export const createExamQuestion = async (
       type,
       exam_id,
       image: rImage ?? '',
+      created_at: Date.now()
     });
     const examObj: any = cleanUp(createdExamQuestion);
     sendResponse(
@@ -975,6 +976,7 @@ export const getAllExamQuestions = async (
     }
     const skip = (page - 1) * limit;
     const examQuestions = await ExamQuestionModel.find({school_id: id, exam_id})
+      .sort('-created_at')
       .select('-__v')
       .skip(skip)
       .limit(limit);
@@ -1093,6 +1095,7 @@ export const updateExamQuestion = async (
       examQuestion.answer = answer;
       examQuestion.options = type === 'option' ? options : [];
       examQuestion.type = type;
+      examQuestion.updated_at = Date.now()
       await examQuestion.save();
       const examQuestionObj: any = cleanUp(examQuestion);
       sendResponse(
