@@ -2,7 +2,7 @@ export interface ICreateExamReq {
   name: string;
   to_answer: number;
   duration: number;
-  class_id: string;
+  class_ids: string[];
   description: string;
 }
 export interface ICreateExamQuestReq {

@@ -36,8 +36,8 @@ const examSchema = new Schema({
     required: true,
     default: Date.now(),
   },
-  class_id: {
-    type: String,
+  class_ids: {
+    type: [String],
     required: true,
   },
 });

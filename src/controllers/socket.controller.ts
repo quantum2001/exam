@@ -37,9 +37,15 @@ export const examSocketController = (io: Server) => {
           } else {
             const exam = await ExamModel.findOne({
               _id: new ObjectId(exam_id),
-              school_id: data.data.school_id,
-              class_id: data.data.class_id,
+              school_id: data.data.school_id
             });
+            if(!exam?.class_ids.includes(data.data.class_id)) {
+              inSession = false;
+              socket.emit('notify', {
+                message: 'Student not in the class that can take the exam',
+              });
+              return;
+            }
             if (!exam?.is_available) {
               inSession = false;
               socket.emit('notify', {

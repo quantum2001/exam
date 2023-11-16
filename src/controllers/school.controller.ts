@@ -529,6 +529,45 @@ export const getAllStudentsByClass = async (
     sendResponse(res, null, 'Server error', 500, 'error');
   }
 };
+export const downloadStudentsInClass = async (
+  req: AuthenticatedReq,
+  res: Response
+) => {
+  const {id} = req.user;
+  const {id: class_id} = req.params;
+  try {
+    const students = await StudentModel.find({
+      school_id: id,
+      class: new ObjectId(class_id),
+    })
+      .populate({
+        path: 'class',
+        select: 'name',
+      })
+      .select('-__v')
+    const refinedStudents = students.map(student => {
+      const studentObj = {
+        name: `${student.firstname} ${student.lastname} ${student.middlename}`,
+        class: (student.class as any).name,
+        access_id: student.access_id,
+        password: student.password
+      }
+      return studentObj;
+    });
+    if(refinedStudents.length) {
+      const data = {
+        results: refinedStudents
+      };
+      sendResponse(res, data, 'Students fetched successfully', 200, 'success');
+    } else {
+      sendResponse(res, null, 'No student in class', 400, 'error');
+    }
+    
+  } catch (e: any) {
+    logger.error(e?.message);
+    sendResponse(res, null, 'Server error', 500, 'error');
+  }
+};
 export const deleteStudent = async (req: AuthenticatedReq, res: Response) => {
   const {id} = req.params;
   const school_id = req.user.id;
@@ -611,15 +650,12 @@ export const updateStudent = async (req: AuthenticatedReq, res: Response) => {
     sendResponse(res, null, 'Server error', 500, 'error');
   }
 };
+
 export const createExam = async (req: AuthenticatedReq, res: Response) => {
-  const {name, class_id, duration, to_answer, description} =
+  const {name, class_ids, duration, to_answer, description} =
     req.body as ICreateExamReq;
   const {id: school_id} = req.user;
-  if (!isObjectIdOrHexString(class_id)) {
-    sendResponse(res, null, 'Invalid class id', 400, 'error');
-    return;
-  }
-  if (!name || !duration || !to_answer || !description) {
+  if (!name || !duration || !to_answer || !description || !Array.isArray(class_ids)) {
     sendResponse(
       res,
       null,
@@ -629,15 +665,23 @@ export const createExam = async (req: AuthenticatedReq, res: Response) => {
     );
     return;
   }
-  try {
-    const fetchedClass = await ClassModel.findOne({
-      _id: new ObjectId(class_id),
-      school_id,
-    });
-    if (!fetchedClass) {
-      sendResponse(res, null, 'Invalid class id', 400, 'error');
+  if(class_ids.length < 1) {
+    sendResponse(
+      res,
+      null,
+      'Select atleast one class',
+      400,
+      'error'
+    );
+    return;
+  }
+  for (let class_id of class_ids) {
+    if (!isObjectIdOrHexString(class_id)) {
+      sendResponse(res, null, 'One of your class is invalid', 400, 'error');
       return;
     }
+  }
+  try {
     if (typeof duration !== 'number') {
       sendResponse(res, null, 'Invalid duration type', 400, 'error');
       return;
@@ -660,7 +704,7 @@ export const createExam = async (req: AuthenticatedReq, res: Response) => {
       name,
       duration,
       to_answer,
-      class_id,
+      class_ids,
       description,
       created_at: Date.now(),
       updated_at: Date.now(),
@@ -752,34 +796,35 @@ export const deleteExam = async (req: AuthenticatedReq, res: Response) => {
 export const updateExam = async (req: AuthenticatedReq, res: Response) => {
   const {id} = req.params;
   const school_id = req.user.id;
-  const {name, class_id, duration, to_answer, description } = req.body;
-  if (!isObjectIdOrHexString(id)) {
-    sendResponse(res, null, 'Invalid exam id', 400, 'error');
-    return;
-  }
-  if (!isObjectIdOrHexString(class_id)) {
-    sendResponse(res, null, 'Invalid class id', 400, 'error');
-    return;
-  }
-  if (!name || !duration || !to_answer || !description) {
-    sendResponse(
-      res,
-      null,
-      'Invalid request body or missing field.',
-      400,
-      'error'
-    );
-    return;
-  }
-  try {
-    const fetchedClass = await ClassModel.findOne({
-      _id: new ObjectId(class_id),
-      school_id,
-    });
-    if (!fetchedClass) {
-      sendResponse(res, null, 'Invalid class id', 400, 'error');
+ const {name, class_ids, duration, to_answer, description} =
+    req.body as ICreateExamReq;
+    if (!name || !duration || !to_answer || !description || !Array.isArray(class_ids)) {
+      sendResponse(
+        res,
+        null,
+        'Invalid request body or missing field.',
+        400,
+        'error'
+      );
       return;
     }
+    if(class_ids.length < 1) {
+      sendResponse(
+        res,
+        null,
+        'Select atleast one class',
+        400,
+        'error'
+      );
+      return;
+    }
+    for (let class_id of class_ids) {
+      if (!isObjectIdOrHexString(class_id)) {
+        sendResponse(res, null, 'One of your class is invalid', 400, 'error');
+        return;
+      }
+    }
+  try {
     const exam = await ExamModel.findOne({
       _id: new ObjectId(id),
       school_id,
@@ -788,7 +833,7 @@ export const updateExam = async (req: AuthenticatedReq, res: Response) => {
       exam.name = name;
       exam.duration = duration;
       exam.to_answer = to_answer;
-      exam.class_id = class_id;
+      exam.class_ids = class_ids;
       exam.description = description;
       exam.updated_at = Date.now();
       await exam.save();

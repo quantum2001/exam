@@ -10,6 +10,7 @@ import {
   deleteExamQuestion,
   deleteStudent,
   downloadResult,
+  downloadStudentsInClass,
   endExam,
   getAllClasses,
   getAllExamQuestions,
@@ -54,6 +55,7 @@ authSchoolRouter.delete('/classes/:id', deleteClass);
 authSchoolRouter.get('/classes/:id', getClass);
 authSchoolRouter.patch('/classes/:id', updateClass);
 authSchoolRouter.get('/classes/:id/students', getAllStudentsByClass);
+authSchoolRouter.get('/classes/:id/students/download', downloadStudentsInClass);
 authSchoolRouter.post('/exams', createExam);
 authSchoolRouter.get('/exams', getAllExams);
 authSchoolRouter.get('/exams/:id', getExam);
