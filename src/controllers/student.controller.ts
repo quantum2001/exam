@@ -171,12 +171,12 @@ export const getAllSchools = async (req: Request, res: Response) => {
   }
 };
 export const getStudent = async (req: AuthenticatedReq, res: Response) => {
-  const { school_id, access_id } = req.user;
+  const {school_id, access_id} = req.user;
   try {
     const student = await StudentModel.findOne({
       access_id,
       school_id,
-    }).select("-__v -password");
+    }).select('-__v -password');
     const studentObj: any = cleanUp(student);
     if (student) {
       sendResponse(
@@ -195,17 +195,20 @@ export const getStudent = async (req: AuthenticatedReq, res: Response) => {
   }
 };
 export const getAllExams = async (req: AuthenticatedReq, res: Response) => {
-  const { school_id, class: class_id } = req.user;
+  const {school_id, class: class_id} = req.user;
   try {
-    const exams = await ExamModel.find({school_id, is_available: true })
-      .select('-__v')
-    const refinedExams = exams.map(exam => {
-      const examObj: any = cleanUp(exam);
+    const exams = await ExamModel.find({school_id, is_available: true}).select(
+      '-__v'
+    );
+    const refinedExams = exams
+      .map(exam => {
+        const examObj: any = cleanUp(exam);
         return examObj;
-    }).filter((exam) => exam.class_ids.includes(class_id));
+      })
+      .filter(exam => exam.class_ids.includes(class_id));
 
     const data = {
-      results: refinedExams
+      results: refinedExams,
     };
     sendResponse(res, data, 'Exams fetched successfully', 200, 'success');
   } catch (e: any) {

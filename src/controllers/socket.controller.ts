@@ -37,9 +37,9 @@ export const examSocketController = (io: Server) => {
           } else {
             const exam = await ExamModel.findOne({
               _id: new ObjectId(exam_id),
-              school_id: data.data.school_id
+              school_id: data.data.school_id,
             });
-            if(!exam?.class_ids.includes(data.data.class)) {
+            if (!exam?.class_ids.includes(data.data.class)) {
               inSession = false;
               socket.emit('notify', {
                 message: 'Student not in the class that can take the exam',
@@ -61,7 +61,7 @@ export const examSocketController = (io: Server) => {
               });
               if (examSession) {
                 time_left = examSession.time_left ?? 0;
-                if(examSession.is_ended){
+                if (examSession.is_ended) {
                   socket.emit('exam-ended', {
                     message: 'exam ended',
                   });
@@ -73,25 +73,31 @@ export const examSocketController = (io: Server) => {
                 const sessionAnswer = await ESAnswerModel.findOne({
                   exam_session_id: examSession.id,
                 });
-                const refinedAnswers = sessionAnswer?.answers.map((ans) => {
+                const refinedAnswers = sessionAnswer?.answers.map(ans => {
                   return {
                     question_id: ans.exam_question,
-                    answer: ans.selected_answer
-                  }
-                })
-                socket.on('submit', async (answers) => {
+                    answer: ans.selected_answer,
+                  };
+                });
+                socket.on('submit', async answers => {
                   const sessionAnswer: any = await ESAnswerModel.findOne({
                     exam_session_id: examSession.id,
                   });
                   const filteredAnswers = answers.filter((ans: any) => {
-                    return (sessionQuestions?.questions?.findIndex((ques) => ques.question_id === ans.question_id) as any) > -1;
-                  })
-                  sessionAnswer.answers = new mongoose.Types.DocumentArray(filteredAnswers.map((ans: any) => {
-                    return {
-                      exam_question: new ObjectId(ans.question_id),
-                      selected_answer: ans.answer
-                    }
-                  }));
+                    return (
+                      (sessionQuestions?.questions?.findIndex(
+                        ques => ques.question_id === ans.question_id
+                      ) as any) > -1
+                    );
+                  });
+                  sessionAnswer.answers = new mongoose.Types.DocumentArray(
+                    filteredAnswers.map((ans: any) => {
+                      return {
+                        exam_question: new ObjectId(ans.question_id),
+                        selected_answer: ans.answer,
+                      };
+                    })
+                  );
                   await sessionAnswer.save();
                   examSession.time_left = time_left;
                   examSession.is_ended = true;
@@ -102,27 +108,27 @@ export const examSocketController = (io: Server) => {
                     message: 'exam ended',
                   });
                 });
-                socket.on("submit-answer", async ({ question_id, answer }) => {
+                socket.on('submit-answer', async ({question_id, answer}) => {
                   const sessionAnswer = await ESAnswerModel.findOne({
                     exam_session_id: examSession.id,
                   });
-                  if(sessionAnswer) {
-                    let answers = sessionAnswer.answers.map((ans) => {
+                  if (sessionAnswer) {
+                    const answers = sessionAnswer.answers.map(ans => {
                       return {
                         exam_question: ans.exam_question,
-                        selected_answer: ans.selected_answer
-                      }
+                        selected_answer: ans.selected_answer,
+                      };
                     });
-                    const answerIdx = answers.findIndex(
-                      (ans) => {
-                        return ans?.exam_question?.toString() === question_id;
-                      }
-                    );
+                    const answerIdx = answers.findIndex(ans => {
+                      return ans?.exam_question?.toString() === question_id;
+                    });
                     const questionIdx = sessionQuestions?.questions.findIndex(
                       (q: any) => q.question_id === question_id
                     );
                     if (questionIdx === -1) {
-                      socket.emit("info", { message: "Question not assigned to student"})
+                      socket.emit('info', {
+                        message: 'Question not assigned to student',
+                      });
                       return;
                     }
                     if (answerIdx > -1) {
@@ -132,16 +138,18 @@ export const examSocketController = (io: Server) => {
                       };
                     } else {
                       answers.push({
-                        exam_question: (new ObjectId(question_id)),
+                        exam_question: new ObjectId(question_id),
                         selected_answer: answer,
                       });
                     }
-                    sessionAnswer.answers = new mongoose.Types.DocumentArray(answers);
+                    sessionAnswer.answers = new mongoose.Types.DocumentArray(
+                      answers
+                    );
                     await sessionAnswer.save();
                   } else {
-                    socket.emit("info", { message: "Session not found"})
+                    socket.emit('info', {message: 'Session not found'});
                   }
-                })
+                });
                 socket.emit('exam-started', {
                   message: 'exam started',
                   data: {
@@ -149,7 +157,7 @@ export const examSocketController = (io: Server) => {
                     exam_name: exam.name,
                     duration: exam.duration,
                     questions: sessionQuestions?.questions,
-                    answers: refinedAnswers ?? []
+                    answers: refinedAnswers ?? [],
                   },
                 });
                 socket.on('disconnect', async () => {
@@ -210,27 +218,28 @@ export const examSocketController = (io: Server) => {
                   });
 
                   // handles submit answer
-                  socket.on("submit-answer", async ({ question_id, answer }) => {``
+                  socket.on('submit-answer', async ({question_id, answer}) => {
+                    ``;
                     const sessionAnswer = await ESAnswerModel.findOne({
                       exam_session_id: examSession.id,
                     });
-                    if(sessionAnswer) {
-                      let answers = sessionAnswer.answers.map((ans) => {
+                    if (sessionAnswer) {
+                      const answers = sessionAnswer.answers.map(ans => {
                         return {
                           exam_question: ans.exam_question,
-                          selected_answer: ans.selected_answer
-                        }
+                          selected_answer: ans.selected_answer,
+                        };
                       });
-                      const answerIdx = answers.findIndex(
-                        (ans) => {
-                          return ans?.exam_question?.toString() === question_id;
-                        }
-                      );
+                      const answerIdx = answers.findIndex(ans => {
+                        return ans?.exam_question?.toString() === question_id;
+                      });
                       const questionIdx = questions.findIndex(
                         (q: any) => q.question_id === question_id
                       );
                       if (questionIdx === -1) {
-                        socket.emit("info", { message: "Question not assigned to student"})
+                        socket.emit('info', {
+                          message: 'Question not assigned to student',
+                        });
                         return;
                       }
                       if (answerIdx > -1) {
@@ -240,19 +249,21 @@ export const examSocketController = (io: Server) => {
                         };
                       } else {
                         answers.push({
-                          exam_question: (new ObjectId(question_id)),
+                          exam_question: new ObjectId(question_id),
                           selected_answer: answer,
                         });
                       }
-                      sessionAnswer.answers = new mongoose.Types.DocumentArray(answers);
+                      sessionAnswer.answers = new mongoose.Types.DocumentArray(
+                        answers
+                      );
                       await sessionAnswer.save();
                     } else {
-                      socket.emit("info", { message: "Session not found"})
+                      socket.emit('info', {message: 'Session not found'});
                     }
-                  })
+                  });
 
                   // handles submitting of answer
-                  socket.on('submit', async (answers) => {
+                  socket.on('submit', async answers => {
                     const sessionQuestions = await ESQuestionModel.findOne({
                       exam_session_id: examSession.id,
                     });
@@ -260,14 +271,20 @@ export const examSocketController = (io: Server) => {
                       exam_session_id: examSession.id,
                     });
                     const filteredAnswers = answers.filter((ans: any) => {
-                      return (sessionQuestions?.questions?.findIndex((ques) => ques.question_id === ans.question_id) as any) > -1;
-                    })
-                    sessionAnswer.answers = new mongoose.Types.DocumentArray(filteredAnswers.map((ans: any) => {
-                      return {
-                        exam_question: new ObjectId(ans.question_id),
-                        selected_answer: ans.answer
-                      }
-                    }));
+                      return (
+                        (sessionQuestions?.questions?.findIndex(
+                          ques => ques.question_id === ans.question_id
+                        ) as any) > -1
+                      );
+                    });
+                    sessionAnswer.answers = new mongoose.Types.DocumentArray(
+                      filteredAnswers.map((ans: any) => {
+                        return {
+                          exam_question: new ObjectId(ans.question_id),
+                          selected_answer: ans.answer,
+                        };
+                      })
+                    );
                     await sessionAnswer.save();
                     examSession.time_left = time_left;
                     examSession.is_ended = true;
@@ -289,7 +306,7 @@ export const examSocketController = (io: Server) => {
                       exam_name: exam.name,
                       duration: exam.duration,
                       questions,
-                      answers: []
+                      answers: [],
                     },
                   });
                   interval = setInterval(async () => {

@@ -228,9 +228,9 @@ export const getAllClasses = async (req: AuthenticatedReq, res: Response) => {
   const {id} = req.user;
   try {
     const classes = await ClassModel.find({school_id: id}).select('-__v');
-    const refinedClassesPromises = classes.map(async (classV) => {
+    const refinedClassesPromises = classes.map(async classV => {
       const classObj: any = cleanUp(classV);
-      const count = await StudentModel.countDocuments({ class: classV._id })
+      const count = await StudentModel.countDocuments({class: classV._id});
       return {...classObj, total_students: count};
     });
     const refinedClasses = await Promise.all(refinedClassesPromises);
@@ -253,8 +253,14 @@ export const getClass = async (req: AuthenticatedReq, res: Response) => {
     const classV = await ClassModel.findById(id).select('-__v');
     if (classV) {
       const classObj: any = cleanUp(classV);
-      const count = await StudentModel.countDocuments({ class: classV._id })
-      sendResponse(res, {...classObj, total_students: count}, 'Class fetched successfully', 200, 'success');
+      const count = await StudentModel.countDocuments({class: classV._id});
+      sendResponse(
+        res,
+        {...classObj, total_students: count},
+        'Class fetched successfully',
+        200,
+        'success'
+      );
     } else {
       sendResponse(res, null, 'Class not found', 404, 'error');
     }
@@ -304,12 +310,12 @@ export const deleteClass = async (req: AuthenticatedReq, res: Response) => {
   const {id} = req.params;
   const school_id = req.user.id;
   try {
-    const count = await StudentModel.countDocuments({ class: id });
-    if(count) {
+    const count = await StudentModel.countDocuments({class: id});
+    if (count) {
       sendResponse(
         res,
         null,
-        'You can\'t delete a class with students',
+        "You can't delete a class with students",
         400,
         'error'
       );
@@ -363,8 +369,9 @@ export const createStudent = async (req: AuthenticatedReq, res: Response) => {
       return;
     }
     const password: string = generateAlphanumericPassword(6);
-    const highestStudentAccessId =
-      await StudentModel.findOne({ school_id }).sort('-access_id');
+    const highestStudentAccessId = await StudentModel.findOne({school_id}).sort(
+      '-access_id'
+    );
     const access_id = highestStudentAccessId
       ? highestStudentAccessId.access_id + 1
       : 1000;
@@ -544,25 +551,24 @@ export const downloadStudentsInClass = async (
         path: 'class',
         select: 'name',
       })
-      .select('-__v')
+      .select('-__v');
     const refinedStudents = students.map(student => {
       const studentObj = {
         name: `${student.firstname} ${student.lastname} ${student.middlename}`,
         class: (student.class as any).name,
         access_id: student.access_id,
-        password: student.password
-      }
+        password: student.password,
+      };
       return studentObj;
     });
-    if(refinedStudents.length) {
+    if (refinedStudents.length) {
       const data = {
-        results: refinedStudents
+        results: refinedStudents,
       };
       sendResponse(res, data, 'Students fetched successfully', 200, 'success');
     } else {
       sendResponse(res, null, 'No student in class', 400, 'error');
     }
-    
   } catch (e: any) {
     logger.error(e?.message);
     sendResponse(res, null, 'Server error', 500, 'error');
@@ -655,7 +661,13 @@ export const createExam = async (req: AuthenticatedReq, res: Response) => {
   const {name, class_ids, duration, to_answer, description} =
     req.body as ICreateExamReq;
   const {id: school_id} = req.user;
-  if (!name || !duration || !to_answer || !description || !Array.isArray(class_ids)) {
+  if (
+    !name ||
+    !duration ||
+    !to_answer ||
+    !description ||
+    !Array.isArray(class_ids)
+  ) {
     sendResponse(
       res,
       null,
@@ -665,17 +677,11 @@ export const createExam = async (req: AuthenticatedReq, res: Response) => {
     );
     return;
   }
-  if(class_ids.length < 1) {
-    sendResponse(
-      res,
-      null,
-      'Select atleast one class',
-      400,
-      'error'
-    );
+  if (class_ids.length < 1) {
+    sendResponse(res, null, 'Select atleast one class', 400, 'error');
     return;
   }
-  for (let class_id of class_ids) {
+  for (const class_id of class_ids) {
     if (!isObjectIdOrHexString(class_id)) {
       sendResponse(res, null, 'One of your class is invalid', 400, 'error');
       return;
@@ -796,34 +802,34 @@ export const deleteExam = async (req: AuthenticatedReq, res: Response) => {
 export const updateExam = async (req: AuthenticatedReq, res: Response) => {
   const {id} = req.params;
   const school_id = req.user.id;
- const {name, class_ids, duration, to_answer, description} =
+  const {name, class_ids, duration, to_answer, description} =
     req.body as ICreateExamReq;
-    if (!name || !duration || !to_answer || !description || !Array.isArray(class_ids)) {
-      sendResponse(
-        res,
-        null,
-        'Invalid request body or missing field.',
-        400,
-        'error'
-      );
+  if (
+    !name ||
+    !duration ||
+    !to_answer ||
+    !description ||
+    !Array.isArray(class_ids)
+  ) {
+    sendResponse(
+      res,
+      null,
+      'Invalid request body or missing field.',
+      400,
+      'error'
+    );
+    return;
+  }
+  if (class_ids.length < 1) {
+    sendResponse(res, null, 'Select atleast one class', 400, 'error');
+    return;
+  }
+  for (const class_id of class_ids) {
+    if (!isObjectIdOrHexString(class_id)) {
+      sendResponse(res, null, 'One of your class is invalid', 400, 'error');
       return;
     }
-    if(class_ids.length < 1) {
-      sendResponse(
-        res,
-        null,
-        'Select atleast one class',
-        400,
-        'error'
-      );
-      return;
-    }
-    for (let class_id of class_ids) {
-      if (!isObjectIdOrHexString(class_id)) {
-        sendResponse(res, null, 'One of your class is invalid', 400, 'error');
-        return;
-      }
-    }
+  }
   try {
     const exam = await ExamModel.findOne({
       _id: new ObjectId(id),
@@ -933,7 +939,7 @@ export const createExamQuestion = async (
     answer,
   } = req.body as ICreateExamQuestReq;
   const {id: school_id} = req.user;
-  const { exam_id } = req.params;
+  const {exam_id} = req.params;
   if (!question || !answer || !type || !exam_id) {
     sendResponse(
       res,
@@ -983,7 +989,7 @@ export const createExamQuestion = async (
       type,
       exam_id,
       image: rImage ?? '',
-      created_at: Date.now()
+      created_at: Date.now(),
     });
     const examObj: any = cleanUp(createdExamQuestion);
     sendResponse(
@@ -1132,7 +1138,7 @@ export const updateExamQuestion = async (
     const examQuestion = await ExamQuestionModel.findOne({
       _id: new ObjectId(id),
       school_id,
-      exam_id
+      exam_id,
     }).select('-__v');
     if (examQuestion) {
       examQuestion.question = question;
@@ -1140,7 +1146,7 @@ export const updateExamQuestion = async (
       examQuestion.answer = answer;
       examQuestion.options = type === 'option' ? options : [];
       examQuestion.type = type;
-      examQuestion.updated_at = Date.now()
+      examQuestion.updated_at = Date.now();
       await examQuestion.save();
       const examQuestionObj: any = cleanUp(examQuestion);
       sendResponse(
@@ -1222,7 +1228,10 @@ export const gradeExam = async (req: AuthenticatedReq, res: Response) => {
     studentAnswers.forEach(async studentAnswer => {
       let score = 0;
       studentAnswer.answers.forEach(answer => {
-        if (answer.selected_answer?.toLowerCase().trim() === (answer?.exam_question as any).answer.toLowerCase().trim()) {
+        if (
+          answer.selected_answer?.toLowerCase().trim() ===
+          (answer?.exam_question as any).answer.toLowerCase().trim()
+        ) {
           score++;
         }
       });

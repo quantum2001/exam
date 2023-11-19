@@ -7,15 +7,15 @@ import {connectsDB} from './utils/db.util';
 import dotenv from 'dotenv';
 import {Server} from 'socket.io';
 import {examSocketController} from './controllers/socket.controller';
-import cors from "cors"
+import cors from 'cors';
 dotenv.config();
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "*"
-  }
+    origin: '*',
+  },
 });
 examSocketController(io);
 
