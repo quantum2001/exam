@@ -1248,6 +1248,7 @@ export const gradeExam = async (req: AuthenticatedReq, res: Response) => {
 export const downloadResult = async (req: AuthenticatedReq, res: Response) => {
   const {id} = req.params;
   const {id: school_id} = req.user;
+  const {class_id} = req.query;
   if (!isObjectIdOrHexString(id)) {
     sendResponse(res, null, 'Invalid exam id', 400, 'error');
     return;
@@ -1263,7 +1264,7 @@ export const downloadResult = async (req: AuthenticatedReq, res: Response) => {
       graded: true,
     }).populate({
       path: 'student',
-      select: 'firstname lastname middlename access_id image',
+      select: 'firstname lastname middlename access_id image class',
     });
     const studentResult = studentAnswers.map(studentAnswer => {
       return {
@@ -1272,13 +1273,30 @@ export const downloadResult = async (req: AuthenticatedReq, res: Response) => {
         exam_date: studentAnswer.created_at,
       };
     });
-    sendResponse(
-      res,
-      studentResult,
-      'Student results generated successfully',
-      200,
-      'success'
-    );
+    if (class_id) {
+      if (!isObjectIdOrHexString(class_id)) {
+        sendResponse(res, null, 'Invalid class id', 400, 'error');
+        return;
+      }
+      const filteredStudent = studentResult.filter((stdResult: any) => {
+        return stdResult.student.class.toString() === class_id;
+      });
+      sendResponse(
+        res,
+        filteredStudent,
+        'Student results generated successfully',
+        200,
+        'success'
+      );
+    } else {
+      sendResponse(
+        res,
+        studentResult,
+        'Student results generated successfully',
+        200,
+        'success'
+      );
+    }
   } catch (e: any) {
     logger.error(e?.message);
     sendResponse(res, null, 'Server error', 500, 'error');
