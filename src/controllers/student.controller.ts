@@ -57,6 +57,8 @@ export const login = async (req: Request, res: Response) => {
     sendResponse(res, null, 'Server error', 500, 'error');
   }
 };
+
+// Not used any more
 export const submitAnswer = async (req: AuthenticatedReq, res: Response) => {
   const {session_id} = req.params;
   const {question_id, answer} = req.body;
@@ -168,19 +170,42 @@ export const getAllSchools = async (req: Request, res: Response) => {
     sendResponse(res, null, 'Server error', 500, 'error');
   }
 };
-export const getAllExams = async (req: AuthenticatedReq, res: Response) => {
-  const { id, class_id } = req.user;
+export const getStudent = async (req: AuthenticatedReq, res: Response) => {
+  const { school_id, access_id } = req.user;
   try {
-    const exams = await ExamModel.find({school_id: id, class_id, is_available: true })
+    const student = await StudentModel.findOne({
+      access_id,
+      school_id,
+    }).select("-__v -password");
+    const studentObj: any = cleanUp(student);
+    if (student) {
+      sendResponse(
+        res,
+        studentObj,
+        'Student fetched successfully',
+        200,
+        'success'
+      );
+    } else {
+      sendResponse(res, null, 'Student not found', 404, 'error');
+    }
+  } catch (e: any) {
+    logger.error(e?.message);
+    sendResponse(res, null, 'Server error', 500, 'error');
+  }
+};
+export const getAllExams = async (req: AuthenticatedReq, res: Response) => {
+  const { school_id, class: class_id } = req.user;
+  try {
+    const exams = await ExamModel.find({school_id, is_available: true })
       .select('-__v')
-    const total = await ExamModel.countDocuments({school_id: id, class_id, is_available: true });
     const refinedExams = exams.map(exam => {
       const examObj: any = cleanUp(exam);
-      return examObj;
-    });
+        return examObj;
+    }).filter((exam) => exam.class_ids.includes(class_id));
+
     const data = {
-      results: refinedExams,
-      total
+      results: refinedExams
     };
     sendResponse(res, data, 'Exams fetched successfully', 200, 'success');
   } catch (e: any) {

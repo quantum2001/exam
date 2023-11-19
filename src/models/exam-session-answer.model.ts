@@ -4,6 +4,7 @@ const answerSchema = new Schema({
   exam_question: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'ExamQuestion',
+    unique: true
   },
   selected_answer: {
     type: String,

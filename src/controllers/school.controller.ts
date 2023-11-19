@@ -1222,7 +1222,7 @@ export const gradeExam = async (req: AuthenticatedReq, res: Response) => {
     studentAnswers.forEach(async studentAnswer => {
       let score = 0;
       studentAnswer.answers.forEach(answer => {
-        if (answer.selected_answer === (answer?.exam_question as any).answer) {
+        if (answer.selected_answer?.toLowerCase().trim() === (answer?.exam_question as any).answer.toLowerCase().trim()) {
           score++;
         }
       });
