@@ -79,7 +79,20 @@ export const examSocketController = (io: Server) => {
                     answer: ans.selected_answer
                   }
                 })
-                socket.on('submit', async () => {
+                socket.on('submit', async (answers) => {
+                  const sessionAnswer: any = await ESAnswerModel.findOne({
+                    exam_session_id: examSession.id,
+                  });
+                  const filteredAnswers = answers.filter((ans: any) => {
+                    return (sessionQuestions?.questions?.findIndex((ques) => ques.question_id === ans.question_id) as any) > -1;
+                  })
+                  sessionAnswer.answers = new mongoose.Types.DocumentArray(filteredAnswers.map((ans: any) => {
+                    return {
+                      exam_question: new ObjectId(ans.question_id),
+                      selected_answer: ans.answer
+                    }
+                  }));
+                  await sessionAnswer.save();
                   examSession.time_left = time_left;
                   examSession.is_ended = true;
                   examSession.end_time = Date.now();
@@ -132,7 +145,7 @@ export const examSocketController = (io: Server) => {
                 socket.emit('exam-started', {
                   message: 'exam started',
                   data: {
-                    session_id: examSession.id,
+                    exam_session_id: examSession._id,
                     exam_name: exam.name,
                     duration: exam.duration,
                     questions: sessionQuestions?.questions,
@@ -239,7 +252,23 @@ export const examSocketController = (io: Server) => {
                   })
 
                   // handles submitting of answer
-                  socket.on('submit', async () => {
+                  socket.on('submit', async (answers) => {
+                    const sessionQuestions = await ESQuestionModel.findOne({
+                      exam_session_id: examSession.id,
+                    });
+                    const sessionAnswer: any = await ESAnswerModel.findOne({
+                      exam_session_id: examSession.id,
+                    });
+                    const filteredAnswers = answers.filter((ans: any) => {
+                      return (sessionQuestions?.questions?.findIndex((ques) => ques.question_id === ans.question_id) as any) > -1;
+                    })
+                    sessionAnswer.answers = new mongoose.Types.DocumentArray(filteredAnswers.map((ans: any) => {
+                      return {
+                        exam_question: new ObjectId(ans.question_id),
+                        selected_answer: ans.answer
+                      }
+                    }));
+                    await sessionAnswer.save();
                     examSession.time_left = time_left;
                     examSession.is_ended = true;
                     examSession.end_time = Date.now();
@@ -256,7 +285,7 @@ export const examSocketController = (io: Server) => {
                   socket.emit('exam-started', {
                     message: 'exam started',
                     data: {
-                      exam_session_id: examSession.id,
+                      exam_session_id: examSession._id,
                       exam_name: exam.name,
                       duration: exam.duration,
                       questions,

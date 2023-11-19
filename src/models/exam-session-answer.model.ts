@@ -3,8 +3,7 @@ import mongoose, {Schema, model} from 'mongoose';
 const answerSchema = new Schema({
   exam_question: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'ExamQuestion',
-    unique: true
+    ref: 'ExamQuestion'
   },
   selected_answer: {
     type: String,
