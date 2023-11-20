@@ -369,7 +369,7 @@ export const createStudent = async (req: AuthenticatedReq, res: Response) => {
       return;
     }
     const password: string = generateAlphanumericPassword(6);
-    const highestStudentAccessId = await StudentModel.findOne({school_id}).sort(
+    const highestStudentAccessId = await StudentModel.findOne().sort(
       '-access_id'
     );
     const access_id = highestStudentAccessId

@@ -17,6 +17,7 @@ const studentSchema = new Schema({
   },
   access_id: {
     type: Number,
+    unique: true,
     required: true,
   },
   school_id: {
