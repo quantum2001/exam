@@ -29,3 +29,11 @@ export const cleanUp = (doc: any): any => {
   delete obj.__v;
   return obj;
 };
+export const shuffleArray = (arr: any[]): any[] => {
+  const copyOfArr = [...arr];
+  for (let i = copyOfArr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [copyOfArr[i], copyOfArr[j]] = [copyOfArr[j], copyOfArr[i]];
+  }
+  return copyOfArr;
+}

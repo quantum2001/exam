@@ -6,6 +6,7 @@ import mongoose, {isObjectIdOrHexString} from 'mongoose';
 import ExamQuestionModel from '../models/exam-question.model';
 import ESQuestionModel from '../models/exam-session-question.model';
 import ESAnswerModel from '../models/exam-session-answer.model';
+import { shuffleArray } from '../utils/helpers.util';
 const ObjectId = mongoose.Types.ObjectId;
 
 export const examSocketController = (io: Server) => {
@@ -199,7 +200,7 @@ export const examSocketController = (io: Server) => {
                   questions = questions.map(question => {
                     return {
                       question_id: question._id,
-                      options: question.options,
+                      options: shuffleArray(question.options),
                       question: question.question,
                       type: question.type,
                     };
